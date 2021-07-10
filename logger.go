@@ -18,6 +18,7 @@ type Logger struct {
 	maxBack     int
 	maxDays     int
 	development bool
+	level       zapcore.Level
 }
 
 // LogOption is the type for options.
@@ -94,6 +95,14 @@ func Development(b bool) LogOption {
 	}
 }
 
+func Level(level zapcore.Level) LogOption {
+	return func(l *Logger) LogOption {
+		prev := l.level
+		l.level = level
+		return Level(prev)
+	}
+}
+
 // Sugar returns a sugared logger with log-lines formatted as JSON.
 func (l *Logger) Sugar() (*zap.SugaredLogger, error) {
 	if len(l.logFile) > 0 {
@@ -104,7 +113,7 @@ func (l *Logger) Sugar() (*zap.SugaredLogger, error) {
 		return logger.Sugar(), nil
 	}
 	files := []string{"stdout"}
-	logger, err := ntnuzap.NTNUZap(files, zapcore.DebugLevel, l.development, l.logUTC)
+	logger, err := ntnuzap.NTNUZap(files, l.level, l.development, l.logUTC)
 	if err != nil {
 		return nil, err
 	}
